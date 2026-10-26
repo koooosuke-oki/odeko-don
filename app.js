@@ -132,12 +132,12 @@
     $('ready-message').textContent = 'はじまるよ！';
     let n = 3;
     $('countdown').textContent = n;
-    beep(600, 0.1);
+    sfx.countdown();
     countdownTimer = setInterval(() => {
       n -= 1;
       if (n > 0) {
         $('countdown').textContent = n;
-        beep(600, 0.1);
+        sfx.countdown();
       } else {
         stopCountdown();
         startGame();
@@ -177,7 +177,7 @@
     $('score').textContent = '0';
     showWord();
     show('play');
-    beep(880, 0.2);
+    sfx.start();
     tick();
     state.timerId = setInterval(tick, 200);
   }
@@ -194,7 +194,7 @@
   function tick() {
     const left = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
     const timer = $('timer');
-    if (timer.textContent !== String(left) && left <= 5 && left > 0) beep(440, 0.08);
+    if (timer.textContent !== String(left) && left <= 5 && left > 0) sfx.hurry();
     timer.textContent = left;
     timer.classList.toggle('hurry', left <= 10);
     if (left <= 0) endGame();
@@ -209,8 +209,8 @@
     const flash = $('flash');
     flash.textContent = ok ? '正解！' : 'パス';
     flash.className = `flash show ${ok ? 'correct' : 'pass'}`;
-    if (ok) { beep(1046, 0.12); setTimeout(() => beep(1318, 0.18), 110); }
-    else beep(300, 0.2);
+    if (ok) sfx.correct();
+    else sfx.pass();
     if (navigator.vibrate) navigator.vibrate(ok ? 80 : [40, 60, 40]);
 
     setTimeout(() => {
@@ -238,7 +238,7 @@
     clearInterval(state.timerId);
     // 最後に表示していたお題（未回答）はパス扱いで結果に入れる
     if (!state.locked) state.results.push({ word: state.words[state.index], ok: false });
-    beep(523, 0.15); setTimeout(() => beep(392, 0.15), 160); setTimeout(() => beep(262, 0.35), 320);
+    sfx.end();
     if (navigator.vibrate) navigator.vibrate(300);
     setTimeout(showResult, 700);
   }
@@ -289,6 +289,7 @@
 
   $('again-btn').addEventListener('click', () => {
     state.timeLeft = Number($('time-select').value);
+    unlockAudio();
     requestWakeLock();
     goReady();
   });
@@ -347,26 +348,60 @@
   $('adult-exit').addEventListener('click', exitAdultMode);
 
   // ---------- 効果音 ----------
+  // 音声ファイルは使わず、その場で音を合成して鳴らす
   let audioCtx = null;
   function unlockAudio() {
     try {
+      // iPhone のマナーモード中でも鳴るようにする（iOS 17 以降）
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
     } catch (e) { audioCtx = null; }
   }
 
-  function beep(freq, duration) {
-    if (!audioCtx) return;
+  // 1音を鳴らす。delay 秒後に、type の波形で freq Hz を duration 秒
+  function tone(freq, duration, { type = 'sine', volume = 0.3, delay = 0 } = {}) {
+    if (!audioCtx || !$('sound-toggle').checked) return;
+    const t = audioCtx.currentTime + delay;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(volume, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
     osc.connect(gain).connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+    osc.start(t);
+    osc.stop(t + duration + 0.05);
   }
+
+  const sfx = {
+    countdown: () => tone(660, 0.12, { type: 'triangle', volume: 0.4 }),
+    start: () => tone(1320, 0.35, { type: 'triangle', volume: 0.45 }),
+    hurry: () => tone(880, 0.07, { type: 'square', volume: 0.12 }),
+    // ピンポーン！（明るい2音のチャイム）
+    correct: () => {
+      tone(1319, 0.25, { type: 'triangle', volume: 0.5 });
+      tone(1047, 0.5, { type: 'triangle', volume: 0.5, delay: 0.15 });
+      tone(2093, 0.3, { type: 'sine', volume: 0.12, delay: 0.15 });
+    },
+    // ブッブー（低いブザー2回）
+    pass: () => {
+      tone(150, 0.18, { type: 'sawtooth', volume: 0.3 });
+      tone(150, 0.3, { type: 'sawtooth', volume: 0.3, delay: 0.22 });
+    },
+    // 終了の笛（長めのブザー）
+    end: () => {
+      tone(523, 0.15, { type: 'square', volume: 0.2 });
+      tone(392, 0.15, { type: 'square', volume: 0.2, delay: 0.16 });
+      tone(262, 0.6, { type: 'square', volume: 0.2, delay: 0.32 });
+    },
+  };
+
+  $('sound-toggle').addEventListener('change', (e) => {
+    unlockAudio();
+    if (e.target.checked) sfx.correct();
+  });
 
   // 画面に戻ってきたら画面スリープ防止をかけ直す
   document.addEventListener('visibilitychange', () => {
