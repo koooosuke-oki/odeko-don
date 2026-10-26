@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#ff7a45">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="おでこでドン">
+  <title>おでこでドン！</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ホーム：カテゴリ選択 -->
+  <section id="home" class="screen active">
+    <header class="home-header">
+      <h1>おでこで<span>ドン！</span></h1>
+      <p class="tagline">スマホをおでこに当てて、みんなのジェスチャーでお題を当てよう</p>
+    </header>
+
+    <div class="settings">
+      <label>制限時間
+        <select id="time-select">
+          <option value="30">30秒</option>
+          <option value="60" selected>60秒</option>
+          <option value="90">90秒</option>
+          <option value="120">120秒</option>
+        </select>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="tilt-toggle" checked>
+        傾けて操作
+      </label>
+    </div>
+
+    <div id="category-list" class="category-list"></div>
+
+    <details class="howto">
+      <summary>あそびかた</summary>
+      <ol>
+        <li>カテゴリを選んで、スマホを<b>横向き</b>にしておでこに当てます。</li>
+        <li>周りの人がジェスチャーや説明でお題を伝えます（お題の言葉そのものは言っちゃダメ）。</li>
+        <li>わかったら<b>下に傾けて正解</b>、わからなければ<b>上に傾けてパス</b>。</li>
+        <li>時間切れまでにたくさん当てよう！</li>
+      </ol>
+      <p class="note">傾け操作をオフにすると、画面のボタンで操作できます。</p>
+    </details>
+  </section>
+
+  <!-- 準備：おでこに当ててカウントダウン -->
+  <section id="ready" class="screen">
+    <div class="ready-box">
+      <p id="ready-category" class="ready-category"></p>
+      <p id="ready-message" class="ready-message">横向きにしておでこに当ててね</p>
+      <p id="countdown" class="countdown"></p>
+      <button id="ready-cancel" class="ghost-btn">やめる</button>
+    </div>
+  </section>
+
+  <!-- プレイ中 -->
+  <section id="play" class="screen">
+    <div class="play-top">
+      <span id="timer" class="timer">60</span>
+      <span id="score" class="score">0</span>
+    </div>
+    <div id="word" class="word"></div>
+    <div class="play-buttons">
+      <button id="pass-btn" class="pass-btn">パス</button>
+      <button id="correct-btn" class="correct-btn">正解！</button>
+    </div>
+    <div id="flash" class="flash"></div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="result" class="screen">
+    <div class="result-box">
+      <p class="result-label">けっか</p>
+      <p class="result-score"><span id="result-score">0</span><small>問 正解</small></p>
+      <ul id="result-list" class="result-list"></ul>
+      <div class="result-buttons">
+        <button id="again-btn" class="primary-btn">もう一回</button>
+        <button id="home-btn" class="ghost-btn">カテゴリを選ぶ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 縦向きのときの案内 -->
+  <div id="rotate-hint" class="rotate-hint">
+    <div class="rotate-icon">📱</div>
+    <p>スマホを横向きにしてね</p>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

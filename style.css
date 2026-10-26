@@ -1,0 +1,243 @@
+:root {
+  --bg: #fff8f0;
+  --text: #2b2118;
+  --muted: #7a6a5c;
+  --accent: #ff7a45;
+  --accent-dark: #e35d27;
+  --card: #ffffff;
+  --border: #f0e2d4;
+  --correct: #2bb673;
+  --pass: #f5a623;
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  border: none;
+  cursor: pointer;
+}
+
+.screen {
+  display: none;
+  min-height: 100dvh;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.screen.active { display: flex; flex-direction: column; }
+
+/* ---------- ホーム ---------- */
+#home { max-width: 720px; margin: 0 auto; gap: 16px; }
+
+.home-header { text-align: center; padding-top: 12px; }
+.home-header h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 9vw, 3.2rem);
+  letter-spacing: 0.04em;
+}
+.home-header h1 span { color: var(--accent); }
+.tagline { margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+.settings {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+.settings label { display: flex; align-items: center; gap: 8px; }
+.settings select {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+}
+.toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+.category-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.category-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 12px;
+  text-align: center;
+  transition: transform 0.1s, border-color 0.1s;
+}
+.category-card:active { transform: scale(0.96); border-color: var(--accent); }
+.category-card .emoji { font-size: 2.4rem; display: block; }
+.category-card .name { font-weight: bold; font-size: 1.1rem; margin-top: 6px; display: block; }
+.category-card .count { color: var(--muted); font-size: 0.8rem; }
+
+.howto {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.howto summary { font-weight: bold; cursor: pointer; }
+.howto ol { padding-left: 1.3em; margin: 8px 0; }
+.note { color: var(--muted); font-size: 0.85rem; margin: 0; }
+
+/* ---------- 準備 ---------- */
+#ready, #result { align-items: center; justify-content: center; text-align: center; }
+#ready { background: var(--accent); color: #fff; }
+.ready-category { font-size: 1.2rem; margin: 0; opacity: 0.9; }
+.ready-message { font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: bold; margin: 12px 0; }
+.countdown { font-size: clamp(5rem, 25vh, 10rem); font-weight: bold; margin: 0; line-height: 1; min-height: 1em; }
+
+.ghost-btn {
+  background: transparent;
+  border: 2px solid currentColor;
+  color: inherit;
+  padding: 10px 24px;
+  border-radius: 999px;
+  margin-top: 16px;
+}
+.primary-btn {
+  background: var(--accent);
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* ---------- プレイ ---------- */
+#play { background: #3b2a5c; color: #fff; position: relative; overflow: hidden; }
+.play-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  font-weight: bold;
+  opacity: 0.85;
+}
+.timer::before { content: "⏱ "; }
+.score::before { content: "⭕ "; }
+.timer.hurry { color: #ff6b6b; }
+
+.word {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: bold;
+  font-size: clamp(2.4rem, 14vw, 7rem);
+  line-height: 1.2;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  padding: 0 8px;
+}
+
+.play-buttons { display: flex; gap: 12px; }
+.play-buttons button {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+}
+.pass-btn { background: var(--pass); }
+.correct-btn { background: var(--correct); }
+/* 傾け操作中はボタンを控えめに（周りの人の補助用） */
+.tilt-mode .play-buttons { opacity: 0.35; }
+
+.flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(3rem, 18vw, 9rem);
+  font-weight: bold;
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.15s;
+}
+.flash.show { opacity: 1; }
+.flash.correct { background: var(--correct); }
+.flash.pass { background: var(--pass); }
+
+/* ---------- 結果 ---------- */
+.result-box { width: 100%; max-width: 520px; }
+.result-label { margin: 0; color: var(--muted); font-weight: bold; }
+.result-score { font-size: 4rem; font-weight: bold; margin: 0; color: var(--accent); }
+.result-score small { font-size: 1.2rem; color: var(--text); margin-left: 4px; }
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  max-height: 45dvh;
+  overflow-y: auto;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.result-list li {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+.result-list li:last-child { border-bottom: none; }
+.result-list .ok::after { content: "⭕"; }
+.result-list .ng { color: var(--muted); }
+.result-list .ng::after { content: "パス"; font-size: 0.8rem; }
+.result-buttons { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#result .ghost-btn { color: var(--muted); }
+
+/* ---------- 縦向きの案内 ---------- */
+.rotate-hint {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 33, 24, 0.92);
+  color: #fff;
+  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+.rotate-icon { font-size: 4rem; animation: rotate 1.6s ease-in-out infinite; }
+@keyframes rotate {
+  0%, 30% { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+body.need-landscape .rotate-hint { display: flex; }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1712;
+    --text: #f5ece3;
+    --muted: #b3a394;
+    --card: #2a221b;
+    --border: #3d3229;
+  }
+}
