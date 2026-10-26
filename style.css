@@ -212,6 +212,60 @@ button {
 .result-buttons { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 #result .ghost-btn { color: var(--muted); }
 
+/* ---------- 大人モード ---------- */
+.adult-link {
+  align-self: center;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  padding: 8px;
+}
+body.adult .adult-link { display: none; }
+
+.adult-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #c2185b;
+  color: #fff;
+  font-weight: bold;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+}
+body.adult .adult-banner { display: flex; }
+.adult-exit {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+body.adult .home-header h1 span { color: #e91e63; }
+body.adult #ready { background: #c2185b; }
+body.adult #play { background: #4a1030; }
+
+#age-gate { align-items: center; justify-content: center; text-align: center; }
+.age-box {
+  width: 100%;
+  max-width: 440px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  line-height: 1.7;
+}
+.age-icon { font-size: 3rem; margin: 0; }
+.age-box h2 { margin: 4px 0 8px; }
+.age-question { font-weight: bold; font-size: 1.15rem; }
+.age-buttons { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 12px; }
+#age-gate .ghost-btn { color: var(--muted); margin-top: 8px; }
+
+/* 特別モード中は、ほかのモードへのリンクも隠す（バナーの「戻る」から切り替える） */
+.mode-links { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+body.adult .mode-links, body.secret .mode-links { display: none; }
+
 /* ---------- ダンサーモード ---------- */
 .secret-link {
   align-self: center;

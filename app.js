@@ -18,6 +18,7 @@
     neutral: false, // おでこに当てた（まっすぐの）状態か
     hasSensor: false,
     wakeLock: null,
+    adult: false,   // 大人モード中か
     secret: false,  // ダンサーモード中か
     secretCategories: [],
   };
@@ -46,7 +47,9 @@
   function renderCategories() {
     const list = $('category-list');
     list.innerHTML = '';
-    const categories = state.secret ? withAllCategory(state.secretCategories) : window.CATEGORIES;
+    let categories = window.CATEGORIES;
+    if (state.adult) categories = withAllCategory(window.ADULT_CATEGORIES);
+    if (state.secret) categories = withAllCategory(state.secretCategories);
     for (const cat of categories) {
       const btn = document.createElement('button');
       btn.className = 'category-card';
@@ -380,6 +383,58 @@
   });
   $('password-cancel').addEventListener('click', () => show('home'));
   $('secret-exit').addEventListener('click', exitSecretMode);
+
+  // ---------- 大人モード・年齢確認 ----------
+  // 年齢確認は、ブラウザを開いている間（タブを閉じるまで）だけ覚えておく
+  const AGE_KEY = 'odeko-age-confirmed';
+
+  function isAgeConfirmed() {
+    try { return sessionStorage.getItem(AGE_KEY) === 'yes'; } catch (e) { return false; }
+  }
+
+  // 大人向けのお題は、年齢確認のあとで初めて読み込む
+  function loadAdultWords() {
+    if (window.ADULT_CATEGORIES) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'words-adult.js' + VERSION;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+  }
+
+  async function enterAdultMode() {
+    try {
+      await loadAdultWords();
+    } catch (e) {
+      alert('お題を読み込めませんでした。通信状態を確認してください。');
+      show('home');
+      return;
+    }
+    state.adult = true;
+    document.body.classList.add('adult');
+    renderCategories();
+    show('home');
+    window.scrollTo(0, 0);
+  }
+
+  function exitAdultMode() {
+    state.adult = false;
+    document.body.classList.remove('adult');
+    renderCategories();
+  }
+
+  $('adult-btn').addEventListener('click', () => {
+    if (isAgeConfirmed()) enterAdultMode();
+    else show('age-gate');
+  });
+  $('age-yes').addEventListener('click', () => {
+    try { sessionStorage.setItem(AGE_KEY, 'yes'); } catch (e) { /* 覚えられなくても続行 */ }
+    enterAdultMode();
+  });
+  $('age-no').addEventListener('click', () => show('home'));
+  $('adult-exit').addEventListener('click', exitAdultMode);
 
   // ---------- 効果音 ----------
   // 音声ファイルは使わず、その場で音を合成して鳴らす

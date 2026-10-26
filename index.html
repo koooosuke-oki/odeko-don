@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="つたえてドン">
   <title>つたえてドン！</title>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <!-- ホーム：カテゴリ選択 -->
@@ -36,6 +36,11 @@
       </label>
     </div>
 
+    <div id="adult-banner" class="adult-banner">
+      <span>🔞 大人モード</span>
+      <button id="adult-exit" class="adult-exit">ふつうのお題に戻る</button>
+    </div>
+
     <div id="secret-banner" class="secret-banner">
       <span>💃 ダンサーモード</span>
       <button id="secret-exit" class="secret-exit">ふつうのお題に戻る</button>
@@ -54,7 +59,26 @@
       <p class="note">傾け操作をオフにすると、画面のボタンで操作できます。</p>
     </details>
 
-    <button id="secret-btn" class="secret-link">💃 ダンサーモード</button>
+    <div class="mode-links">
+      <button id="secret-btn" class="secret-link">💃 ダンサーモード</button>
+      <button id="adult-btn" class="adult-link">🔞 大人モード（18歳以上）</button>
+    </div>
+  </section>
+
+  <!-- 年齢確認 -->
+  <section id="age-gate" class="screen">
+    <div class="age-box">
+      <p class="age-icon">🔞</p>
+      <h2>年齢確認</h2>
+      <p>大人モードには、<b>性的な表現を含むお題</b>が出てきます。<br>
+        18歳未満の方はご利用いただけません。</p>
+      <p class="age-question">あなたは18歳以上ですか？</p>
+      <div class="age-buttons">
+        <button id="age-yes" class="primary-btn">はい、18歳以上です</button>
+        <button id="age-no" class="ghost-btn">いいえ</button>
+      </div>
+      <p class="note">遊ぶ前に、参加する全員がこのお題でOKか確認しておきましょう。</p>
+    </div>
   </section>
 
   <!-- ダンサーモードのパスワード入力 -->
@@ -116,8 +140,8 @@
     <p>スマホを横向きにしてね</p>
   </div>
 
-  <script src="words.js?v=8"></script>
+  <script src="words.js?v=9"></script>
   <!-- 更新したら ?v= の数字を3か所とも上げる（スマホに古い版が残らないように） -->
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
