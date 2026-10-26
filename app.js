@@ -1,6 +1,8 @@
 // つたえてドン！ ゲーム本体
 (() => {
   const $ = (id) => document.getElementById(id);
+  // index.html で付けた ?v=… を、あとから読み込むファイルにも付ける
+  const VERSION = new URL(document.currentScript.src).search;
 
   const state = {
     category: null,
@@ -43,7 +45,7 @@
   function renderCategories() {
     const list = $('category-list');
     list.innerHTML = '';
-    const categories = state.adult ? window.ADULT_CATEGORIES : window.CATEGORIES;
+    const categories = state.adult ? withAllCategory(window.ADULT_CATEGORIES) : window.CATEGORIES;
     for (const cat of categories) {
       const btn = document.createElement('button');
       btn.className = 'category-card';
@@ -53,6 +55,16 @@
       btn.addEventListener('click', () => selectCategory(cat));
       list.appendChild(btn);
     }
+  }
+
+  // テーマ別のカテゴリの先頭に、全テーマのお題をまとめた「ぜんぶ」を足す
+  function withAllCategory(categories) {
+    const all = {
+      name: 'ぜんぶ',
+      emoji: '🔞',
+      words: [...new Set(categories.flatMap((c) => c.words))],
+    };
+    return [all, ...categories];
   }
 
   async function selectCategory(cat) {
@@ -295,7 +307,7 @@
     if (window.ADULT_CATEGORIES) return Promise.resolve();
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = 'words-adult.js';
+      script.src = 'words-adult.js' + VERSION;
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);
