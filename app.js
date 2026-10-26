@@ -439,14 +439,22 @@
   // ---------- 効果音 ----------
   // 音声ファイルは使わず、その場で音を合成して鳴らす
   let audioCtx = null;
+  let audioCreatedAt = 0;
+
   function unlockAudio() {
     try {
       // iPhone のマナーモード中でも鳴るようにする（iOS 17 以降）
       if (navigator.audioSession) navigator.audioSession.type = 'playback';
-      if (!audioCtx || audioCtx.state === 'closed') {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // iPhone はキーボードを出したあとなどに音が止まり、再開を頼んでも戻らないことがある。
+      // 止まっていたらタップの中で作り直す（1回のタップで何度も作り直さないよう1秒あける）
+      if (audioCtx && audioCtx.state !== 'running' && Date.now() - audioCreatedAt > 1000) {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
       }
-      // iPhone は止まると 'suspended' だけでなく 'interrupted' にもなるので、動いていなければ再開する
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCreatedAt = Date.now();
+      }
       if (audioCtx.state !== 'running') audioCtx.resume();
       // 無音を一瞬鳴らして、iPhone で音の再生を確実に有効にする
       const buffer = audioCtx.createBuffer(1, 1, 22050);
