@@ -1,4 +1,4 @@
-// おでこでドン！ ゲーム本体
+// つたえてドン！ ゲーム本体
 (() => {
   const $ = (id) => document.getElementById(id);
 
