@@ -17,3 +17,5 @@
 - `style.css` … 見た目
 - `app.js` … ゲームの動き・傾き検出
 - `words.js` … お題（カテゴリの追加はここ）
+- `dancer.enc.json` … ダンサーモードのお題（パスワードで暗号化済み）
+- `tools/encrypt-words.py` … ダンサーモードのお題を暗号化するスクリプト

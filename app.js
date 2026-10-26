@@ -18,7 +18,8 @@
     neutral: false, // おでこに当てた（まっすぐの）状態か
     hasSensor: false,
     wakeLock: null,
-    adult: false,   // 大人モード中か
+    secret: false,  // ダンサーモード中か
+    secretCategories: [],
   };
 
   // ---------- 画面切り替え ----------
@@ -45,7 +46,7 @@
   function renderCategories() {
     const list = $('category-list');
     list.innerHTML = '';
-    const categories = state.adult ? withAllCategory(window.ADULT_CATEGORIES) : window.CATEGORIES;
+    const categories = state.secret ? withAllCategory(state.secretCategories) : window.CATEGORIES;
     for (const cat of categories) {
       const btn = document.createElement('button');
       btn.className = 'category-card';
@@ -57,11 +58,12 @@
     }
   }
 
-  // テーマ別のカテゴリの先頭に、全テーマのお題をまとめた「ぜんぶ」を足す
+  // テーマが2つ以上あるときは、先頭に全テーマのお題をまとめた「ぜんぶ」を足す
   function withAllCategory(categories) {
+    if (categories.length < 2) return categories;
     const all = {
       name: 'ぜんぶ',
-      emoji: '🔞',
+      emoji: '🌟',
       words: [...new Set(categories.flatMap((c) => c.words))],
     };
     return [all, ...categories];
@@ -295,57 +297,89 @@
   });
   $('home-btn').addEventListener('click', () => show('home'));
 
-  // ---------- 大人モード・年齢確認 ----------
-  // 年齢確認は、ブラウザを開いている間（タブを閉じるまで）だけ覚えておく
-  const AGE_KEY = 'odeko-age-confirmed';
+  // ---------- ダンサーモード（パスワード付き） ----------
+  // お題はパスワードで暗号化して dancer.enc.json に入れてある。
+  // 正しいパスワードでしか中身を取り出せないので、公開ファイルを見られても名前はわからない。
+  // 作り直すときは tools/encrypt-words.py を使う。
+  const SECRET_KEY = 'tsutaete-secret-words';
 
-  function isAgeConfirmed() {
-    try { return sessionStorage.getItem(AGE_KEY) === 'yes'; } catch (e) { return false; }
+  // 全角・半角の違いや前後の空白は気にしない
+  function normalizePassword(text) {
+    return text.normalize('NFKC').trim();
   }
 
-  // 大人向けのお題は、年齢確認のあとで初めて読み込む
-  function loadAdultWords() {
-    if (window.ADULT_CATEGORIES) return Promise.resolve();
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'words-adult.js' + VERSION;
-      script.onload = resolve;
-      script.onerror = reject;
-      document.body.appendChild(script);
-    });
+  function fromBase64(b64) {
+    return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   }
 
-  async function enterAdultMode() {
-    try {
-      await loadAdultWords();
-    } catch (e) {
-      alert('お題を読み込めませんでした。通信状態を確認してください。');
-      show('home');
-      return;
-    }
-    state.adult = true;
-    document.body.classList.add('adult');
+  // 正しいパスワードならカテゴリの配列を返す。違えば例外になる
+  async function decryptWords(password) {
+    const res = await fetch('dancer.enc.json' + VERSION);
+    if (!res.ok) throw new Error('network');
+    const enc = await res.json();
+    const baseKey = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(normalizePassword(password)), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: fromBase64(enc.salt), iterations: enc.iterations, hash: 'SHA-256' },
+      baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: fromBase64(enc.iv) }, key, fromBase64(enc.data));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  function enterSecretMode(categories) {
+    state.secretCategories = categories;
+    state.secret = true;
+    document.body.classList.add('secret');
     renderCategories();
     show('home');
     window.scrollTo(0, 0);
   }
 
-  function exitAdultMode() {
-    state.adult = false;
-    document.body.classList.remove('adult');
+  function exitSecretMode() {
+    state.secret = false;
+    document.body.classList.remove('secret');
     renderCategories();
   }
 
-  $('adult-btn').addEventListener('click', () => {
-    if (isAgeConfirmed()) enterAdultMode();
-    else show('age-gate');
+  // 一度入れたら、タブを閉じるまではパスワードを聞き直さない
+  function savedSecretWords() {
+    try { return JSON.parse(sessionStorage.getItem(SECRET_KEY)); } catch (e) { return null; }
+  }
+
+  $('secret-btn').addEventListener('click', () => {
+    const saved = savedSecretWords();
+    if (saved) {
+      enterSecretMode(saved);
+      return;
+    }
+    $('password-input').value = '';
+    $('password-error').textContent = '';
+    show('password-gate');
+    $('password-input').focus();
   });
-  $('age-yes').addEventListener('click', () => {
-    try { sessionStorage.setItem(AGE_KEY, 'yes'); } catch (e) { /* 覚えられなくても続行 */ }
-    enterAdultMode();
+
+  $('password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = $('password-input');
+    if (!input.value.trim()) {
+      $('password-error').textContent = 'パスワードを入力してください';
+      return;
+    }
+    try {
+      const categories = await decryptWords(input.value);
+      try { sessionStorage.setItem(SECRET_KEY, JSON.stringify(categories)); } catch (err) { /* 覚えられなくても続行 */ }
+      input.blur();
+      enterSecretMode(categories);
+    } catch (err) {
+      $('password-error').textContent = err.message === 'network'
+        ? '読み込めませんでした。通信状態を確認してください'
+        : 'パスワードがちがいます';
+      input.select();
+    }
   });
-  $('age-no').addEventListener('click', () => show('home'));
-  $('adult-exit').addEventListener('click', exitAdultMode);
+  $('password-cancel').addEventListener('click', () => show('home'));
+  $('secret-exit').addEventListener('click', exitSecretMode);
 
   // ---------- 効果音 ----------
   // 音声ファイルは使わず、その場で音を合成して鳴らす
