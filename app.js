@@ -354,14 +354,28 @@
     try {
       // iPhone のマナーモード中でも鳴るようにする（iOS 17 以降）
       if (navigator.audioSession) navigator.audioSession.type = 'playback';
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!audioCtx || audioCtx.state === 'closed') {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      // iPhone は止まると 'suspended' だけでなく 'interrupted' にもなるので、動いていなければ再開する
+      if (audioCtx.state !== 'running') audioCtx.resume();
+      // 無音を一瞬鳴らして、iPhone で音の再生を確実に有効にする
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(audioCtx.destination);
+      src.start(0);
     } catch (e) { audioCtx = null; }
   }
+
+  // どの画面でも、タップされたら音を使える状態に戻しておく
+  document.addEventListener('touchend', unlockAudio, { passive: true });
+  document.addEventListener('click', unlockAudio);
 
   // 1音を鳴らす。delay 秒後に、type の波形で freq Hz を duration 秒
   function tone(freq, duration, { type = 'sine', volume = 0.3, delay = 0 } = {}) {
     if (!audioCtx || !$('sound-toggle').checked) return;
+    if (audioCtx.state !== 'running') audioCtx.resume();
     const t = audioCtx.currentTime + delay;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
