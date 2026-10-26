@@ -76,6 +76,7 @@ button {
 }
 .category-card {
   background: var(--card);
+  color: var(--text);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 12px;
